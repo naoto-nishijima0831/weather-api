@@ -1,6 +1,8 @@
 import django_filters
 
 import datetime
+import calendar
+
 from datetime import timedelta
 
 from rest_framework import viewsets, filters
@@ -14,6 +16,9 @@ from django.db.models import Count
 
 
 class WeatherViewSet(viewsets.ViewSet):
+
+    def get_last_date(self, dt):
+        return dt.replace(day=calendar.monthrange(dt.year, dt.month)[1])
 
     def list(self, request):
         try:
@@ -113,18 +118,50 @@ class WeatherViewSet(viewsets.ViewSet):
 
                 response = []
 
-                for item in queryset:
-                    response.append(
-                        {
-                            'month': item.month,
-                            'period': period,
-                            'target': target,
-                            'value' : {
-                                'avarage': round(item.avg, 2), 
+                for index, item in enumerate(queryset):
+                    if index == 0:
+                        dt = datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10]))
+                        to_dt = self.get_last_date(dt)
+                        response.append(
+                            {
+                                'from': from_date,
+                                'to': to_dt,
+                                'period': period,
+                                'target': target,
+                                'value' : {
+                                    'avarage': round(item.avg, 2), 
+                                }
                             }
-                        }
-                    )
-
+                        )
+                    elif index == len(queryset) - 1:
+                        dt = item.month + '-01'
+                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
+                        response.append(
+                            {
+                                'from': from_dt,
+                                'to': to_date,
+                                'period': period,
+                                'target': target,
+                                'value' : {
+                                    'avarage': round(item.avg, 2), 
+                                }
+                            }
+                        )
+                    else:
+                        from_dt = item.month + '-01'
+                        dt = datetime.date(int(from_dt[0:4]), int(from_dt[5:7]), int(from_dt[8:10]))
+                        to_dt = self.get_last_date(dt)
+                        response.append(
+                            {
+                                'from': from_dt,
+                                'to': to_dt,
+                                'period': period,
+                                'target': target,
+                                'value' : {
+                                    'avarage': round(item.avg, 2), 
+                                }
+                            }
+                        )
                 return Response(response)
             else:
                 pass
