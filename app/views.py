@@ -28,19 +28,39 @@ class WeatherViewSet(viewsets.ViewSet):
             target = request.GET['target']
 
             if (from_date < '2018-11-04' or from_date > '2020-11-04'):
-                return Response({'result' : 'error'})
+                return Response({
+                    'error' : {
+                        'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
+                    }
+                })
 
             if (to_date < '2018-11-04' or to_date > '2020-11-04'):
-                return Response({'result' : 'error'})
+                return Response({
+                    'error' : {
+                        'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
+                    }
+                })
 
             if (from_date > to_date):
-                return Response({'result' : 'error'})
+                return Response({
+                    'error' : {
+                        'message' : '指定日付が不正です。'
+                    }
+                })
 
             if (period not in ['monthly', 'weekly', 'daily']):
-                return Response({'result' : 'error'})
+                return Response({
+                    'error' : {
+                        'message' : '期間種別が不正です。'
+                    }
+                })
 
             if (target not in ['precipitation', 'daylight']):
-                return Response({'result' : 'error'})
+                return Response({
+                    'error' : {
+                        'message' : '集計対象が不正です。'
+                    }
+                })
             
             if (period == 'daily'):
                 queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date).aggregate(Avg(target), Min(target), Max(target))
@@ -178,4 +198,8 @@ class WeatherViewSet(viewsets.ViewSet):
             else:
                 pass
         except:
-            return Response({'result' : 'error'})
+            return Response({
+                'error' : {
+                    'message' : 'エラーが発生しました。'
+                }
+            })
