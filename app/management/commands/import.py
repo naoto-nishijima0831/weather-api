@@ -19,6 +19,8 @@ class Command(BaseCommand):
             data.date = row[0]
             data.precipitation = row[1]
             data.daylight = row[2]
+            data.windspeed = row[3]
+            data.area = row[4]
             data.save()
         
         print('Success!!')

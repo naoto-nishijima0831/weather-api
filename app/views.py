@@ -55,7 +55,7 @@ class WeatherViewSet(viewsets.ViewSet):
                     }
                 })
 
-            if (target not in ['precipitation', 'daylight']):
+            if (target not in ['precipitation', 'daylight', 'windspeed']):
                 return Response({
                     'error' : {
                         'message' : '集計対象が不正です。'
