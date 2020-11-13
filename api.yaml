@@ -1,0 +1,114 @@
+swagger: "2.0"
+info:
+  title: Weather API
+  version: 1.0.2
+schemes:
+  - http
+paths:
+  "/weather/summary":
+    get:
+      summary: 気象データの集計結果を取得
+      description: 気象データや日付範囲を指定して、集計結果（平均値、最大値、最小値）を返却します.
+      operationId: getPetById
+      produces:
+        - application/json; charset=utf-8
+      parameters:
+        - name: from_date
+          description: 開始日
+          required: true
+          in: query
+          type: string
+          format: YYYY-MM-DD
+        - name: to_date
+          description: 終了日
+          required: true
+          in: query
+          type: string
+          format: YYYY-MM-DD
+        - name: period
+          description: 期間種別（monthly, weekly, daily）
+          required: true
+          in: query
+          type: string
+        - name: target
+          description: 集計対象（precipitation, daylight, windspeed）
+          required: true
+          in: query
+          type: string
+        - name: area
+          description: 場所（Tokyo, Yokohama）
+          required: true
+          in: query
+          type: string
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: "object"
+            properties:
+              from_date:
+                type: "string"
+                example: "2020-10-01"
+              to_date:
+                type: "string"
+                example: "2020-10-31"
+              period:
+                type: "string"
+                example: "daily"
+              target:
+                type: "string"
+                example: "windspeed"
+              area:
+                type: "string"
+                example: "Tokyo"
+              value:
+                $ref: "#/definitions/Value"
+        "400":
+          description: 失敗
+          schema:
+            type: "object"
+            properties:
+              error:
+                $ref: "#/definitions/Error"
+definitions:
+  Response:
+    type: "object"
+    properties:
+      from_date:
+        type: "string"
+        example: "2020-10-01"
+      to_date:
+        type: "string"
+        example: "2020-10-31"
+      period:
+        type: "string"
+        example: "daily"
+      target:
+        type: "string"
+        example: "windspeed"
+      area:
+        type: "string"
+        example: "Tokyo"
+      value:
+        $ref: "#/definitions/Value"
+  Value:
+    type: "object"
+    properties:
+      average:
+        type: integer
+        format: float
+        example: "1.50"
+      min:
+          type: integer
+          format: float
+          example: "0.00"
+      max:
+          type: integer
+          format: float
+          example: "3.00"
+  Error:
+    type: "object"
+    properties:
+      message:
+        type: string
+        example: "指定日付が不正です。"
