@@ -66,9 +66,11 @@ class WeatherViewSet(viewsets.ViewSet):
                         'period': period,
                         'target': target,
                         'area': area,
-                        'average': round(queryset[target + '__avg'], 2), 
-                        'min': queryset[target + '__min'],
-                        'max': queryset[target + '__max'],
+                        'value': {
+                            'average': round(queryset[target + '__avg'], 2), 
+                            'min': queryset[target + '__min'],
+                            'max': queryset[target + '__max'],
+                        }
                     }
                 )
                 return Response(serializer.initial_data)
@@ -84,23 +86,27 @@ class WeatherViewSet(viewsets.ViewSet):
                         continue
 
                     if index == 0:
-                        to_date = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
+                        from_dt = from_date
+                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
                     elif index == len(queryset) - 1:
-                        from_date = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        from_dt = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        to_dt = to_date
                     else:
-                        from_date = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
-                        to_date = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
+                        from_dt = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
 
                     serializer = ResponseSerializer(
                         data={
-                            'from': from_date,
-                            'to': to_date,
+                            'from': from_dt,
+                            'to': to_dt,
                             'period': period,
                             'target': target,
                             'area': area,
-                            'average': round(item.avg, 2), 
-                            'min': item.min,
-                            'max': item.max, 
+                            'value': {
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max,
+                            } 
                         }
                     )
 
@@ -127,14 +133,16 @@ class WeatherViewSet(viewsets.ViewSet):
 
                     serializer = ResponseSerializer(
                         data={
-                            'from': from_date,
-                            'to': to_date,
+                            'from': from_dt,
+                            'to': to_dt,
                             'period': period,
                             'target': target,
                             'area': area,
-                            'average': round(item.avg, 2), 
-                            'min': item.min,
-                            'max': item.max, 
+                            'value': {
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max,
+                            } 
                         }
                     )
                     response.append(serializer.initial_data)
