@@ -19,20 +19,9 @@ class WeatherViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
-            from_date = request.GET['from_date']
-            to_date = request.GET['to_date']
-            period = request.GET['period']
-            target = request.GET['target']
-            area = request.GET['area']
+            from_date, to_date, period, target, area = request.GET['from_date'], request.GET['to_date'], request.GET['period'], request.GET['target'], request.GET['area']
 
-            if (from_date < '2018-11-04' or from_date > '2020-11-04'):
-                return Response({
-                    'error' : {
-                        'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
-                    }
-                })
-
-            if (to_date < '2018-11-04' or to_date > '2020-11-04'):
+            if (from_date < '2018-11-04' or from_date > '2020-11-04' or to_date < '2018-11-04' or to_date > '2020-11-04'):
                 return Response({
                     'error' : {
                         'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
@@ -69,6 +58,7 @@ class WeatherViewSet(viewsets.ViewSet):
             
             if (period == 'daily'):
                 queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date, area=area).aggregate(Avg(target), Min(target), Max(target))
+                
                 serializer = ResponseSerializer(
                     data={
                         'from_date': from_date, 
@@ -90,56 +80,32 @@ class WeatherViewSet(viewsets.ViewSet):
                 response = []
 
                 for index, item in enumerate(queryset):
-                    
                     if item.week[5:] == '00':
                         continue
 
                     if index == 0:
-                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                        serializer = ResponseSerializer(
-                            data={
-                                'from_date': from_date, 
-                                'to_date': to_dt, 
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2),
-                                'min': item.min,
-                                'max': item.max, 
-                            }
-                        )
-                        response.append(serializer.initial_data)
+                        to_date = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
                     elif index == len(queryset) - 1:
-                        from_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w")).strftime("%Y-%m-%d")
-                        serializer = ResponseSerializer(
-                            data={
-                                'from': from_dt,
-                                'to': to_date,
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max, 
-                            }
-                        )
-                        response.append(serializer.initial_data)
+                        from_date = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
                     else:
-                        from_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w")).strftime("%Y-%m-%d")
-                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                        serializer = ResponseSerializer(
-                            data={
-                                'from': from_dt,
-                                'to': to_dt,
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max, 
-                            }
-                        )
-                        response.append(serializer.initial_data)
+                        from_date = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        to_date = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
+
+                    serializer = ResponseSerializer(
+                        data={
+                            'from': from_date,
+                            'to': to_date,
+                            'period': period,
+                            'target': target,
+                            'area': area,
+                            'average': round(item.avg, 2), 
+                            'min': item.min,
+                            'max': item.max, 
+                        }
+                    )
+
+                    response.append(serializer.initial_data)
+
                 return Response(response)
             elif (period == 'monthly'):
                 queryset = Weather.objects.raw(
@@ -149,52 +115,30 @@ class WeatherViewSet(viewsets.ViewSet):
                 response = []
 
                 for index, item in enumerate(queryset):
+                    dt = item.month + '-01'
+
                     if index == 0:
-                        dt = datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10]))
-                        to_dt = self.get_last_date(dt)
-                        response.append(
-                            {
-                                'from': from_date,
-                                'to': to_dt,
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max,
-                            }
-                        )
+                        to_date = self.get_last_date(datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10])))
                     elif index == len(queryset) - 1:
-                        dt = item.month + '-01'
-                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
-                        response.append(
-                            {
-                                'from': from_dt,
-                                'to': to_date,
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max,
-                            }
-                        )
+                        from_date = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
                     else:
-                        from_dt = item.month + '-01'
-                        dt = datetime.date(int(from_dt[0:4]), int(from_dt[5:7]), int(from_dt[8:10]))
-                        to_dt = self.get_last_date(dt)
-                        response.append(
-                            {
-                                'from': from_dt,
-                                'to': to_dt,
-                                'period': period,
-                                'target': target,
-                                'area': area,
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max,
-                            }
-                        )
+                        from_date = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
+                        to_date = self.get_last_date(datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10])))
+
+                    serializer = ResponseSerializer(
+                        data={
+                            'from': from_date,
+                            'to': to_date,
+                            'period': period,
+                            'target': target,
+                            'area': area,
+                            'average': round(item.avg, 2), 
+                            'min': item.min,
+                            'max': item.max, 
+                        }
+                    )
+                    response.append(serializer.initial_data)
+
                 return Response(response)
             else:
                 pass
