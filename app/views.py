@@ -59,6 +59,13 @@ class WeatherViewSet(viewsets.ViewSet):
                         'message' : '集計対象が不正です。'
                     }
                 })
+
+            if (area not in ['Yokohama', 'Tokyo']):
+                return Response({
+                    'error' : {
+                        'message' : '指定エリアが不正です。'
+                    }
+                })
             
             if (period == 'daily'):
                 queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date, area=area).aggregate(Avg(target), Min(target), Max(target))
@@ -89,10 +96,10 @@ class WeatherViewSet(viewsets.ViewSet):
 
                     if index == 0:
                         to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                        response.append(
-                            {
-                                'from': from_date,
-                                'to': to_dt,
+                        serializer = ResponseSerializer(
+                            data={
+                                'from_date': from_date, 
+                                'to_date': to_dt, 
                                 'period': period,
                                 'target': target,
                                 'area': area,
@@ -101,10 +108,11 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'max': item.max, 
                             }
                         )
+                        response.append(serializer.initial_data)
                     elif index == len(queryset) - 1:
                         from_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w")).strftime("%Y-%m-%d")
-                        response.append(
-                            {
+                        serializer = ResponseSerializer(
+                            data={
                                 'from': from_dt,
                                 'to': to_date,
                                 'period': period,
@@ -115,11 +123,12 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'max': item.max, 
                             }
                         )
+                        response.append(serializer.initial_data)
                     else:
                         from_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w")).strftime("%Y-%m-%d")
                         to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                        response.append(
-                            {
+                        serializer = ResponseSerializer(
+                            data={
                                 'from': from_dt,
                                 'to': to_dt,
                                 'period': period,
@@ -130,6 +139,7 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'max': item.max, 
                             }
                         )
+                        response.append(serializer.initial_data)
                 return Response(response)
             elif (period == 'monthly'):
                 queryset = Weather.objects.raw(
