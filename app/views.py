@@ -17,15 +17,13 @@ from django.db.models import Count, Avg, Max, Min
 
 class WeatherViewSet(viewsets.ViewSet):
 
-    def get_last_date(self, dt):
-        return dt.replace(day=calendar.monthrange(dt.year, dt.month)[1])
-
     def list(self, request):
         try:
             from_date = request.GET['from_date']
             to_date = request.GET['to_date']
             period = request.GET['period']
             target = request.GET['target']
+            area = request.GET['area']
 
             if (from_date < '2018-11-04' or from_date > '2020-11-04'):
                 return Response({
@@ -63,24 +61,23 @@ class WeatherViewSet(viewsets.ViewSet):
                 })
             
             if (period == 'daily'):
-                queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date).aggregate(Avg(target), Min(target), Max(target))
+                queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date, area=area).aggregate(Avg(target), Min(target), Max(target))
                 serializer = ResponseSerializer(
                     data={
                         'from_date': from_date, 
                         'to_date': to_date, 
                         'period': period,
                         'target': target,
-                        # 'value': {
-                            'average': round(queryset[target + '__avg'], 2), 
-                            'min': queryset[target + '__min'],
-                            'max': queryset[target + '__max'],
-                        # }
+                        'area': area,
+                        'average': round(queryset[target + '__avg'], 2), 
+                        'min': queryset[target + '__min'],
+                        'max': queryset[target + '__max'],
                     }
                 )
                 return Response(serializer.initial_data)
             elif (period == 'weekly'):
                 queryset = Weather.objects.raw(
-                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%W", date) as week from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" group by week'
+                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%W", date) as week from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" and area = "' + area + '" group by week'
                 )
 
                 response = []
@@ -98,11 +95,10 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_dt,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2),
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2),
+                                'min': item.min,
+                                'max': item.max, 
                             }
                         )
                     elif index == len(queryset) - 1:
@@ -113,11 +109,10 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_date,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2), 
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max, 
                             }
                         )
                     else:
@@ -129,17 +124,16 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_dt,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2), 
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max, 
                             }
                         )
                 return Response(response)
             elif (period == 'monthly'):
                 queryset = Weather.objects.raw(
-                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%m", date) as month from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" group by month'
+                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%m", date) as month from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" and area = "' + area + '" group by month'
                 )
 
                 response = []
@@ -154,11 +148,10 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_dt,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2), 
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max,
                             }
                         )
                     elif index == len(queryset) - 1:
@@ -170,11 +163,10 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_date,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2), 
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max,
                             }
                         )
                     else:
@@ -187,11 +179,10 @@ class WeatherViewSet(viewsets.ViewSet):
                                 'to': to_dt,
                                 'period': period,
                                 'target': target,
-                                # 'value' : {
-                                    'average': round(item.avg, 2), 
-                                    'min': item.min,
-                                    'max': item.max, 
-                                # }
+                                'area': area,
+                                'average': round(item.avg, 2), 
+                                'min': item.min,
+                                'max': item.max,
                             }
                         )
                 return Response(response)
@@ -203,3 +194,6 @@ class WeatherViewSet(viewsets.ViewSet):
                     'message' : 'エラーが発生しました。'
                 }
             })
+
+    def get_last_date(self, dt):
+        return dt.replace(day=calendar.monthrange(dt.year, dt.month)[1])
