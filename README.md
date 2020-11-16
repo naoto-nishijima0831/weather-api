@@ -15,6 +15,28 @@
 
 仮想環境を起動します。
 
-`cd weatherproj`
+`python -m venv myvenv`
 
-`weather\Scripts\activate`
+`myvenv\Scripts\activate`
+
+必要なライブラリをインストールします。
+
+`python -m pip install --upgrade pip`
+
+`pip install -r ./weather-api/requirements.txt`
+
+データベースをセットアップします。
+
+`cd weather-api`
+
+`python manage.py migrate`
+
+`python manage.py import`
+
+サーバーを起動します。
+
+`python manage.py runserver`
+
+リクエスト例。
+
+`http://127.0.0.1:8000/weather/summary/?from_date=2020-10-01&to_date=2020-10-31&period=daily&target=daylight&area=Yokohama`
