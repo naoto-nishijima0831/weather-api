@@ -21,12 +21,12 @@ class WeatherViewSet(viewsets.ViewSet):
         try:
             from_date, to_date, period, target, area = request.GET['from_date'], request.GET['to_date'], request.GET['period'], request.GET['target'], request.GET['area']
 
-            if (from_date < '2018-11-04' or from_date > '2020-11-04' or to_date < '2018-11-04' or to_date > '2020-11-04'):
-                return Response({
-                    'error' : {
-                        'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
-                    }
-                })
+            # if (from_date < '2018-11-04' or from_date > '2020-11-04' or to_date < '2018-11-04' or to_date > '2020-11-04'):
+            #     return Response({
+            #         'error' : {
+            #             'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
+            #         }
+            #     })
 
             if (from_date > to_date):
                 return Response({
@@ -57,23 +57,30 @@ class WeatherViewSet(viewsets.ViewSet):
                 })
             
             if (period == 'daily'):
-                queryset = Weather.objects.filter(date__gte=from_date, date__lte=to_date, area=area).aggregate(Avg(target), Min(target), Max(target))
-                
-                serializer = ResponseSerializer(
-                    data={
-                        'from_date': from_date, 
-                        'to_date': to_date, 
-                        'period': period,
-                        'target': target,
-                        'area': area,
-                        'value': {
-                            'average': round(queryset[target + '__avg'], 2), 
-                            'min': queryset[target + '__min'],
-                            'max': queryset[target + '__max'],
+                response = []
+
+                start = datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10]))
+                end = datetime.date(int(to_date[0:4]), int(to_date[5:7]), int(to_date[8:10]))
+
+                for i in range((end - start).days + 1):
+                    date = str(start + timedelta(i))
+                    queryset = Weather.objects.filter(date__gte=date, date__lte=date, area=area).aggregate(Avg(target), Min(target), Max(target))
+                    serializer = ResponseSerializer(
+                        data={
+                            'from_date': date, 
+                            'to_date': date, 
+                            'period': period,
+                            'target': target,
+                            'area': area,
+                            'value': {
+                                'average': 'No data' if queryset[target + '__avg'] is None else round(queryset[target + '__avg'], 2), 
+                                'min': 'No data' if queryset[target + '__min'] is None else round(queryset[target + '__min'], 2),
+                                'max': 'No data' if queryset[target + '__max'] is None else round(queryset[target + '__max'], 2),
+                            }
                         }
-                    }
-                )
-                return Response(serializer.initial_data)
+                    )
+                    response.append(serializer.initial_data)
+                return Response(response)
             elif (period == 'weekly'):
                 queryset = Weather.objects.raw(
                     'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%W", date) as week from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" and area = "' + area + '" group by week'
