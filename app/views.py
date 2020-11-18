@@ -66,9 +66,9 @@ class WeatherViewSet(viewsets.ViewSet):
                             'target': target,
                             'area': area,
                             'value': {
-                                'average': 'No data' if item['avg'] is None else round(item['avg'], 2), 
-                                'min': 'No data' if item['min'] is None else round(item['min'], 2),
-                                'max': 'No data' if item['max'] is None else round(item['max'], 2),
+                                'average': round(item['avg'], 2), 
+                                'min': round(item['min'], 2),
+                                'max': round(item['max'], 2),
                             }
                         }
                     )
@@ -101,8 +101,8 @@ class WeatherViewSet(viewsets.ViewSet):
                             'area': area,
                             'value': {
                                 'average': round(item['avg'], 2), 
-                                'min': item['min'],
-                                'max': item['max'],
+                                'min': round(item['min'], 2),
+                                'max': round(item['max'], 2),
                             } 
                         }
                     )
@@ -137,8 +137,8 @@ class WeatherViewSet(viewsets.ViewSet):
                             'area': area,
                             'value': {
                                 'average': round(item['avg'], 2), 
-                                'min': item['min'],
-                                'max': item['max'],
+                                'min': round(item['min'], 2),
+                                'max': round(item['max'], 2),
                             } 
                         }
                     )
