@@ -52,6 +52,9 @@ class WeatherViewSet(viewsets.ViewSet):
                         'message' : '指定エリアが不正です。'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
+
+            from_date = self.get_from_date_or_to_date(area, 'from', from_date)
+            to_date = self.get_from_date_or_to_date(area, 'to', to_date)
             
             if period == 'daily':
                 dateFormat = '%Y-%m-%d'
@@ -119,3 +122,12 @@ class WeatherViewSet(viewsets.ViewSet):
 
     def get_last_date(self, dt):
         return dt.replace(day=calendar.monthrange(dt.year, dt.month)[1])
+
+    def get_from_date_or_to_date(self, area, from_or_to, date):
+        if from_or_to == 'from':
+            the_oldest_date_in_table = Weather.objects.filter(area=area).order_by('date').first().date
+            response_date = the_oldest_date_in_table if the_oldest_date_in_table > date else date
+        elif from_or_to == 'to':
+            the_latest_date_in_table = Weather.objects.filter(area=area).order_by('date').reverse().first().date
+            response_date = the_latest_date_in_table if the_latest_date_in_table < date else date
+        return response_date
