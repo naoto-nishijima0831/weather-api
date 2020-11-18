@@ -64,38 +64,40 @@ class WeatherViewSet(viewsets.ViewSet):
             queryset = Weather.objects.extra(select={'date':'strftime("' + dateFormat + '", date)'}, where=['area="' + area + '"and date>="' + str(from_date) + '" and date<="' + str(to_date) +'"']).values('date').annotate(avg=Avg(target), min=Min(target), max=Max(target))
             for index, item in enumerate(queryset):
                 if period == 'daily':
-                    from_dt = item['date']
-                    to_dt = item['date']
+                    res_from_date = item['date']
+                    res_to_date = item['date']
                 elif period == 'weekly':
                     if item['date'][5:] == '00':
                         continue
 
-                    if index == 0:
-                        from_dt = from_date
-                        to_dt = (datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                    elif index == len(queryset) - 1:
-                        from_dt = datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
-                        to_dt = to_date
-                    else:
-                        from_dt = datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
-                        to_dt = (datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
-                elif period == 'monthly':
-                    dt = item['date'] + '-01'
+                    first_day_of_the_week = datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w")
 
                     if index == 0:
-                        from_dt = from_date
-                        to_dt = self.get_last_date(from_dt)
+                        res_from_date = from_date
+                        res_to_date = (first_day_of_the_week + timedelta(days=6)).strftime("%Y-%m-%d")
                     elif index == len(queryset) - 1:
-                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
-                        to_dt = to_date
+                        res_from_date = first_day_of_the_week.strftime("%Y-%m-%d")
+                        res_to_date = to_date
                     else:
-                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
-                        to_dt = self.get_last_date(from_dt)
+                        res_from_date = first_day_of_the_week.strftime("%Y-%m-%d")
+                        res_to_date = (first_day_of_the_week + timedelta(days=6)).strftime("%Y-%m-%d")
+                elif period == 'monthly':
+                    first_day_of_the_month = datetime.date(int((item['date'] + '-01')[0:4]), int((item['date'] + '-01')[5:7]), int((item['date'] + '-01')[8:10])).replace(day=1)
+
+                    if index == 0:
+                        res_from_date = from_date
+                        res_to_date = self.get_last_date(res_from_date)
+                    elif index == len(queryset) - 1:
+                        res_from_date = first_day_of_the_month
+                        res_to_date = to_date
+                    else:
+                        res_from_date = first_day_of_the_month
+                        res_to_date = self.get_last_date(res_from_date)
 
                 serializer = ResponseSerializer(
                     data={
-                        'from_date': from_dt, 
-                        'to_date': to_dt, 
+                        'from_date': res_from_date, 
+                        'to_date': res_to_date, 
                         'period': period,
                         'target': target,
                         'area': area,
