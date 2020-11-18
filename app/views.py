@@ -19,14 +19,11 @@ class WeatherViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
-            from_date, to_date, period, target, area = request.GET['from_date'], request.GET['to_date'], request.GET['period'], request.GET['target'], request.GET['area']
+            from_date = datetime.date(int(request.GET['from_date'][0:4]), int(request.GET['from_date'][5:7]), int(request.GET['from_date'][8:10]))
 
-            # if (from_date < '2018-11-04' or from_date > '2020-11-04' or to_date < '2018-11-04' or to_date > '2020-11-04'):
-            #     return Response({
-            #         'error' : {
-            #             'message' : '指定可能な日付は、2018年11月4日から2020年11月4日までです。'
-            #         }
-            #     })
+            to_date = datetime.date(int(request.GET['to_date'][0:4]), int(request.GET['to_date'][5:7]), int(request.GET['to_date'][8:10]))
+
+            period, target, area = request.GET['period'], request.GET['target'], request.GET['area']
 
             if (from_date > to_date):
                 return Response({
@@ -58,49 +55,42 @@ class WeatherViewSet(viewsets.ViewSet):
             
             if (period == 'daily'):
                 response = []
-
-                start = datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10]))
-                end = datetime.date(int(to_date[0:4]), int(to_date[5:7]), int(to_date[8:10]))
-
-                for i in range((end - start).days + 1):
-                    date = str(start + timedelta(i))
-                    queryset = Weather.objects.filter(date__gte=date, date__lte=date, area=area).aggregate(Avg(target), Min(target), Max(target))
+                dateFormat = '%Y-%m-%d'
+                queryset = Weather.objects.extra(select={'date':'strftime("' + dateFormat + '", date)'}, where=['area="' + area + '"and date>="' + str(from_date) + '" and date<="' + str(to_date) +'"']).values('date').annotate(avg=Avg(target), min=Min(target), max=Max(target))
+                for index, item in enumerate(queryset):
                     serializer = ResponseSerializer(
                         data={
-                            'from_date': date, 
-                            'to_date': date, 
+                            'from_date': item['date'], 
+                            'to_date': item['date'], 
                             'period': period,
                             'target': target,
                             'area': area,
                             'value': {
-                                'average': 'No data' if queryset[target + '__avg'] is None else round(queryset[target + '__avg'], 2), 
-                                'min': 'No data' if queryset[target + '__min'] is None else round(queryset[target + '__min'], 2),
-                                'max': 'No data' if queryset[target + '__max'] is None else round(queryset[target + '__max'], 2),
+                                'average': 'No data' if item['avg'] is None else round(item['avg'], 2), 
+                                'min': 'No data' if item['min'] is None else round(item['min'], 2),
+                                'max': 'No data' if item['max'] is None else round(item['max'], 2),
                             }
                         }
                     )
                     response.append(serializer.initial_data)
                 return Response(response)
             elif (period == 'weekly'):
-                queryset = Weather.objects.raw(
-                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%W", date) as week from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" and area = "' + area + '" group by week'
-                )
-
                 response = []
-
+                dateFormat = '%Y-%W'
+                queryset = Weather.objects.extra(select={'date':'strftime("' + dateFormat + '", date)'}, where=['area="' + area + '"and date>="' + str(from_date) + '" and date<="' + str(to_date) +'"']).values('date').annotate(avg=Avg(target), min=Min(target), max=Max(target))
                 for index, item in enumerate(queryset):
-                    if item.week[5:] == '00':
+                    if item['date'][5:] == '00':
                         continue
 
                     if index == 0:
                         from_dt = from_date
-                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
+                        to_dt = (datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
                     elif index == len(queryset) - 1:
-                        from_dt = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        from_dt = datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
                         to_dt = to_date
                     else:
-                        from_dt = datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
-                        to_dt = (datetime.datetime.strptime(item.week + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
+                        from_dt = datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w").strftime("%Y-%m-%d")
+                        to_dt = (datetime.datetime.strptime(item['date'] + '-1', "%Y-%W-%w") + timedelta(days=6)).strftime("%Y-%m-%d")
 
                     serializer = ResponseSerializer(
                         data={
@@ -110,9 +100,9 @@ class WeatherViewSet(viewsets.ViewSet):
                             'target': target,
                             'area': area,
                             'value': {
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max,
+                                'average': round(item['avg'], 2), 
+                                'min': item['min'],
+                                'max': item['max'],
                             } 
                         }
                     )
@@ -121,22 +111,22 @@ class WeatherViewSet(viewsets.ViewSet):
 
                 return Response(response)
             elif (period == 'monthly'):
-                queryset = Weather.objects.raw(
-                    'select id, avg(' + target + ') as avg, min(' + target + ') as min, max(' + target + ') as max, strftime("%Y-%m", date) as month from app_weather where date <= "' + to_date + '" and date >= "' + from_date + '" and area = "' + area + '" group by month'
-                )
-
                 response = []
-
+                dateFormat = '%Y-%m'
+                queryset = Weather.objects.extra(select={'date':'strftime("' + dateFormat + '", date)'}, where=['area="' + area + '"and date>="' + str(from_date) + '" and date<="' + str(to_date) +'"']).values('date').annotate(avg=Avg(target), min=Min(target), max=Max(target))
                 for index, item in enumerate(queryset):
-                    dt = item.month + '-01'
+                    print(item)
+                    dt = item['date'] + '-01'
 
                     if index == 0:
-                        to_date = self.get_last_date(datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10])))
+                        from_dt = from_date
+                        to_dt = self.get_last_date(from_dt)
                     elif index == len(queryset) - 1:
-                        from_date = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
+                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
+                        to_dt = to_date
                     else:
-                        from_date = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
-                        to_date = self.get_last_date(datetime.date(int(from_date[0:4]), int(from_date[5:7]), int(from_date[8:10])))
+                        from_dt = datetime.date(int(dt[0:4]), int(dt[5:7]), int(dt[8:10])).replace(day=1)
+                        to_dt = self.get_last_date(from_dt)
 
                     serializer = ResponseSerializer(
                         data={
@@ -146,9 +136,9 @@ class WeatherViewSet(viewsets.ViewSet):
                             'target': target,
                             'area': area,
                             'value': {
-                                'average': round(item.avg, 2), 
-                                'min': item.min,
-                                'max': item.max,
+                                'average': round(item['avg'], 2), 
+                                'min': item['min'],
+                                'max': item['max'],
                             } 
                         }
                     )
