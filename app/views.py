@@ -5,7 +5,7 @@ import calendar
 
 from datetime import timedelta
 
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 
 
@@ -30,28 +30,28 @@ class WeatherViewSet(viewsets.ViewSet):
                     'error' : {
                         'message' : '指定日付が不正です。'
                     }
-                })
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if (period not in ['monthly', 'weekly', 'daily']):
                 return Response({
                     'error' : {
                         'message' : '期間種別が不正です。'
                     }
-                })
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if (target not in ['precipitation', 'daylight', 'windspeed']):
                 return Response({
                     'error' : {
                         'message' : '集計対象が不正です。'
                     }
-                })
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if (area not in ['Yokohama', 'Tokyo']):
                 return Response({
                     'error' : {
                         'message' : '指定エリアが不正です。'
                     }
-                })
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             if period == 'daily':
                 dateFormat = '%Y-%m-%d'
@@ -107,13 +107,13 @@ class WeatherViewSet(viewsets.ViewSet):
                     }
                 )
                 response.append(serializer.initial_data)
-            return Response(response)
+            return Response(response, status=status.HTTP_200_OK)
         except:
             return Response({
                 'error' : {
-                    'message' : 'エラーが発生しました。'
+                    'message' : 'サーバーエラーが発生しました。'
                 }
-            })
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_last_date(self, dt):
         return dt.replace(day=calendar.monthrange(dt.year, dt.month)[1])
