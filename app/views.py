@@ -12,12 +12,18 @@ from rest_framework.response import Response
 from .models import Weather
 from .serializer import ResponseSerializer
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Count, Avg, Max, Min
 
 
 def login(request):
     return render(request, 'app/login.html', {})
+
+
+def auth(request):
+    print('email : ' + request.POST['email'])
+    print('password : ' + request.POST['password'])
+    return redirect('/weather')
 
 
 def weather(request):

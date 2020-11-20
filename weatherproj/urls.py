@@ -19,9 +19,10 @@ from django.conf import settings
 from app.urls import router
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', include('app.urls')),
     path('weather/', include(router.urls)),
+
+    path('admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:
