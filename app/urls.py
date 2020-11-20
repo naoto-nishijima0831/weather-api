@@ -8,9 +8,3 @@ from .views import WeatherViewSet
 
 router = routers.DefaultRouter()
 router.register('summary', WeatherViewSet, basename='summary')
-
-urlpatterns = [
-    path('login/', views.login, name='login'),
-    path('auth/', views.auth, name='auth'),
-    path('weather/', views.weather, name='weather'),
-]

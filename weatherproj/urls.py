@@ -19,7 +19,7 @@ from django.conf import settings
 from app.urls import router
 
 urlpatterns = [
-    path('', include('app.urls')),
+    path('', include('accounts.urls')),
     path('weather/', include(router.urls)),
 
     path('admin/', admin.site.urls),
