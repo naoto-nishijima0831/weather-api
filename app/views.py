@@ -12,8 +12,12 @@ from rest_framework.response import Response
 from .models import Weather
 from .serializer import ResponseSerializer
 
+from django.shortcuts import render
 from django.db.models import Count, Avg, Max, Min
 
+
+def login(request):
+    return render(request, 'app/login.html', {})
 
 class WeatherViewSet(viewsets.ViewSet):
 
