@@ -19,6 +19,11 @@ from django.db.models import Count, Avg, Max, Min
 def login(request):
     return render(request, 'app/login.html', {})
 
+
+def weather(request):
+    return render(request, 'app/weather.html', {})
+
+
 class WeatherViewSet(viewsets.ViewSet):
 
     def list(self, request):
