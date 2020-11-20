@@ -12,4 +12,3 @@ class Login(LoginView):
 
 class Logout(LoginRequiredMixin, LogoutView):
     template_name = 'accounts/login.html'
-# ここまで追加
