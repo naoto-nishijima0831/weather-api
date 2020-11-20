@@ -16,20 +16,6 @@ from django.shortcuts import render, redirect
 from django.db.models import Count, Avg, Max, Min
 
 
-def login(request):
-    return render(request, 'app/login.html', {})
-
-
-def auth(request):
-    print('email : ' + request.POST['email'])
-    print('password : ' + request.POST['password'])
-    return redirect('/weather')
-
-
-def weather(request):
-    return render(request, 'app/weather.html', {})
-
-
 class WeatherViewSet(viewsets.ViewSet):
 
     def list(self, request):
