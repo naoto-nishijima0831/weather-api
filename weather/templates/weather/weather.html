@@ -1,0 +1,28 @@
+{% if user.is_authenticated %}
+    <p>{{ user.get_username }}でログイン中</p>
+{% endif %}
+
+<p><a href="{% url 'accounts:logout' %}">ログアウト</a></p>
+
+<form action="{% url 'weather:api'%}" method="post">
+    {% csrf_token %}
+    <div>
+        <label for="from-date">開始日:</label>
+        <input type="date" name="from-date" id="from-date" />
+    </div>
+    <div>
+        <label for="to-date">終了日:</label>
+        <input type="date" name="to-date" id="to-date" />
+    </div>
+    <div>
+        <label for="area">エリア:</label>
+        <input type="text" name="area" id="area" />
+    </div>
+    <div>
+        <label for="target">取得対象:</label>
+        <input type="text" name="target" id="target" />
+    </div>
+    <div>
+        <button type="submit">call</button>
+    </div>
+</form>

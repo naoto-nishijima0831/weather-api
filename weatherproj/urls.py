@@ -20,6 +20,7 @@ from app.urls import router
 
 urlpatterns = [
     path('', include('accounts.urls')),
+    path('weatherview/', include('weather.urls')),
     path('weather/', include(router.urls)),
 
     path('admin/', admin.site.urls),

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'accounts',
+    'weather',
     'rest_framework',
 ]
 
@@ -124,7 +125,7 @@ STATIC_URL = '/static/'
 
 LOGIN_URL = '/login' 
 
-LOGIN_REDIRECT_URL = '/weather'
+LOGIN_REDIRECT_URL = '/weatherview'
 
 LOGOUT_REDIRECT_URL='/login'
 
