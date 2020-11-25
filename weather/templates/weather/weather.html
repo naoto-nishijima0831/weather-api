@@ -78,6 +78,12 @@
     </form>
 
     <script>
+        document.getElementById( "from-date" ).value  = "{{ from_date }}" ;
+        document.getElementById( "to-date" ).value    = "{{ to_date }}" ;
+        document.getElementById( "area" ).value       = "{{ area }}" ;
+        document.getElementById( "target" ).value     = "{{ target }}" ;
+        document.getElementById( "period" ).value     = "{{ period }}" ;
+
         let labels = [];
         let dataMax = [];
         let dataMin = [];
