@@ -40,4 +40,28 @@
     <div>
         <button type="submit">更新</button>
     </div>
+    <div>
+        <table>
+            <tr>
+                <th>開始日</th>
+                <th>終了日</th>
+                <th>エリア</th>
+                <th>集計対象</th>
+                <th>最小値</th>
+                <th>最大値</th>
+                <th>平均値</th>
+            </tr>
+            {% for record in api_result %}
+                <tr>
+                    <td>{{ record.from_date }}</td>
+                    <td>{{ record.to_date }}</td>
+                    <td>{{ record.area }}</td>
+                    <td>{{ record.target }}</td>
+                    <td>{{ record.value.min }}</td>
+                    <td>{{ record.value.max }}</td>
+                    <td>{{ record.value.average }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 </form>

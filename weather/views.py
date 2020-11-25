@@ -15,5 +15,4 @@ def api(request):
                 'period'    : request.POST.get('period'),
             }
     result = requests.get('http://127.0.0.1:8000/weather/summary', params=params).json()
-    print(result)
-    return render(request, 'weather/weather.html')
+    return render(request, 'weather/weather.html', {'api_result': result})
