@@ -16,13 +16,28 @@
     </div>
     <div>
         <label for="area">エリア:</label>
-        <input type="text" name="area" id="area" />
+        <select name="area">
+            <option value="Tokyo">東京</option>
+            <option value="Yokohama">横浜</option>
+        </select>
     </div>
     <div>
-        <label for="target">取得対象:</label>
-        <input type="text" name="target" id="target" />
+        <label for="target">集計対象:</label>
+        <select name="target">
+            <option value="precipitation">降水量</option>
+            <option value="daylight">日照時間</option>
+            <option value="windspeed">風速</option>
+        </select>
     </div>
     <div>
-        <button type="submit">call</button>
+        <label for="period">期間種別:</label>
+        <select name="period">
+            <option value="daily">日別</option>
+            <option value="weekly">週別</option>
+            <option value="monthly">月別</option>
+        </select>
+    </div>
+    <div>
+        <button type="submit">更新</button>
     </div>
 </form>
