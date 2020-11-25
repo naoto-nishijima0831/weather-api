@@ -1,67 +1,122 @@
-{% if user.is_authenticated %}
-    <p>{{ user.get_username }}でログイン中</p>
-{% endif %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
-<p><a href="{% url 'accounts:logout' %}">ログアウト</a></p>
+    {% if user.is_authenticated %}
+        <p>{{ user.get_username }}でログイン中</p>
+    {% endif %}
 
-<form action="{% url 'weather:api'%}" method="post">
-    {% csrf_token %}
-    <div>
-        <label for="from-date">開始日:</label>
-        <input type="date" name="from-date" id="from-date" />
-    </div>
-    <div>
-        <label for="to-date">終了日:</label>
-        <input type="date" name="to-date" id="to-date" />
-    </div>
-    <div>
-        <label for="area">エリア:</label>
-        <select name="area">
-            <option value="Tokyo">東京</option>
-            <option value="Yokohama">横浜</option>
-        </select>
-    </div>
-    <div>
-        <label for="target">集計対象:</label>
-        <select name="target">
-            <option value="precipitation">降水量</option>
-            <option value="daylight">日照時間</option>
-            <option value="windspeed">風速</option>
-        </select>
-    </div>
-    <div>
-        <label for="period">期間種別:</label>
-        <select name="period">
-            <option value="daily">日別</option>
-            <option value="weekly">週別</option>
-            <option value="monthly">月別</option>
-        </select>
-    </div>
-    <div>
-        <button type="submit">更新</button>
-    </div>
-    <div>
-        <table>
-            <tr>
-                <th>開始日</th>
-                <th>終了日</th>
-                <th>エリア</th>
-                <th>集計対象</th>
-                <th>最小値</th>
-                <th>最大値</th>
-                <th>平均値</th>
-            </tr>
-            {% for record in api_result %}
+    <p><a href="{% url 'accounts:logout' %}">ログアウト</a></p>
+
+    <form action="{% url 'weather:api'%}" method="post">
+        {% csrf_token %}
+        <div>
+            <label for="from-date">開始日:</label>
+            <input type="date" name="from-date" id="from-date" />
+        </div>
+        <div>
+            <label for="to-date">終了日:</label>
+            <input type="date" name="to-date" id="to-date" />
+        </div>
+        <div>
+            <label for="area">エリア:</label>
+            <select id="area" name="area">
+                <option value="Tokyo">東京</option>
+                <option value="Yokohama">横浜</option>
+            </select>
+        </div>
+        <div>
+            <label for="target">集計対象:</label>
+            <select id="target" name="target">
+                <option value="precipitation">降水量</option>
+                <option value="daylight">日照時間</option>
+                <option value="windspeed">風速</option>
+            </select>
+        </div>
+        <div>
+            <label for="period">期間種別:</label>
+            <select id="period" name="period">
+                <option value="daily">日別</option>
+                <option value="weekly">週別</option>
+                <option value="monthly">月別</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit">更新</button>
+        </div>
+        <canvas id='weather-graph'></canvas>
+        <div>
+            <table>
                 <tr>
-                    <td>{{ record.from_date }}</td>
-                    <td>{{ record.to_date }}</td>
-                    <td>{{ record.area }}</td>
-                    <td>{{ record.target }}</td>
-                    <td>{{ record.value.min }}</td>
-                    <td>{{ record.value.max }}</td>
-                    <td>{{ record.value.average }}</td>
+                    <th>開始日</th>
+                    <th>終了日</th>
+                    <th>エリア</th>
+                    <th>集計対象</th>
+                    <th>最小値</th>
+                    <th>最大値</th>
+                    <th>平均値</th>
                 </tr>
-            {% endfor %}
-        </table>
-    </div>
-</form>
+                {% for record in api_result %}
+                    <tr>
+                        <td>{{ record.from_date }}</td>
+                        <td>{{ record.to_date }}</td>
+                        <td>{{ record.area }}</td>
+                        <td>{{ record.target }}</td>
+                        <td>{{ record.value.min }}</td>
+                        <td>{{ record.value.max }}</td>
+                        <td>{{ record.value.average }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </form>
+
+    <script>
+        let labels = [];
+        let dataMax = [];
+        let dataMin = [];
+        let dataAve = [];
+
+        '{% for record in api_result %}'
+            labels.push('{{ record.from_date }}' === '{{ record.to_date }}' ? '{{ record.from_date }}' : '{{ record.from_date }}' + '-' + '{{ record.to_date }}');
+            dataMax.push('{{ record.value.max }}');
+            dataMin.push('{{ record.value.min }}');
+            dataAve.push('{{ record.value.average }}');
+        '{% endfor %}'
+        
+        let ctx = document.getElementById('weather-graph').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Max',
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: dataMax
+                    },
+                    {
+                        label: 'Average',
+                        borderColor: 'rgb(255, 206, 86)',
+                        data: dataAve
+                    },
+                    {
+                        label: 'Min',
+                        borderColor: 'rgb(54, 162, 235)',
+                        data: dataMin
+                    },
+                ]
+            },
+
+            options: {}
+        });
+    </script>
+</body>
+</html>
