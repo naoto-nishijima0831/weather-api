@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/sanitize.css"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Document</title>
 </head>
 <body>
+    <!-- jQuery first, then Tether, then Bootstrap JS. -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
     {% if user.is_authenticated %}
@@ -51,28 +57,43 @@
             <button type="submit">更新</button>
         </div>
         <canvas id='weather-graph'></canvas>
+        <div class="table-pagination">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="#">Prev</a></li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                </ul>
+            </nav>
+        </div>
         <div>
-            <table>
-                <tr>
-                    <th>開始日</th>
-                    <th>終了日</th>
-                    <th>エリア</th>
-                    <th>集計対象</th>
-                    <th>最小値</th>
-                    <th>最大値</th>
-                    <th>平均値</th>
-                </tr>
-                {% for record in api_result %}
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>{{ record.from_date }}</td>
-                        <td>{{ record.to_date }}</td>
-                        <td>{{ record.area }}</td>
-                        <td>{{ record.target }}</td>
-                        <td>{{ record.value.min }}</td>
-                        <td>{{ record.value.max }}</td>
-                        <td>{{ record.value.average }}</td>
+                        <th>開始日</th>
+                        <th>終了日</th>
+                        <th>エリア</th>
+                        <th>集計対象</th>
+                        <th>最小値</th>
+                        <th>最大値</th>
+                        <th>平均値</th>
                     </tr>
-                {% endfor %}
+                </thead>
+                <tbody>
+                    {% for record in api_result %}
+                        <tr>
+                            <td>{{ record.from_date }}</td>
+                            <td>{{ record.to_date }}</td>
+                            <td>{{ record.area }}</td>
+                            <td>{{ record.target }}</td>
+                            <td>{{ record.value.min }}</td>
+                            <td>{{ record.value.max }}</td>
+                            <td>{{ record.value.average }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </form>
@@ -119,9 +140,7 @@
                         data: dataMin
                     },
                 ]
-            },
-
-            options: {}
+            }
         });
     </script>
 </body>
